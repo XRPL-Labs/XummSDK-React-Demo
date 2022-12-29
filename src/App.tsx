@@ -2,12 +2,13 @@ import { useState } from 'react'
 import './App.css'
 import {Xumm} from 'xumm'
 
-const xumm = new Xumm('xxxx') // Some API Key
+const xumm = new Xumm('47fdfcb7-8362-47fe-9a89-a2efc55e86d5') // Some API Key
 
 function App() {
   const [account, setAccount] = useState('')
   const [payloadUuid, setPayloadUuid] = useState('')
   const [lastPayloadUpdate, setLastPayloadUpdate] = useState('')
+  const [openPayloadUrl, setOpenPayloadUrl] = useState('')
 
   xumm.user.account.then(a => setAccount(a ?? ''))
 
@@ -18,8 +19,6 @@ function App() {
       Account: account,
       Amount: String(1337),
     }, event => {
-      console.log(event.data)
-
       // Return if signed or not signed (rejected)
       setLastPayloadUpdate(JSON.stringify(event.data, null, 2))
 
@@ -35,7 +34,11 @@ function App() {
       if (xumm.runtime.xapp) {
         xumm.xapp?.openSignRequest(payload.created)
       } else {
-        window.open(payload.created.next.always)
+        if (payload.created.pushed && payload.created.next?.no_push_msg_received) {
+          setOpenPayloadUrl(payload.created.next.no_push_msg_received)
+        } else {
+          window.open(payload.created.next.always)
+        }
       }
     }
 
@@ -59,7 +62,14 @@ function App() {
       }
       <br />
       <br />
-      <code>{ payloadUuid }</code>
+      <code>{payloadUuid}</code>
+      {
+        payloadUuid
+          ? openPayloadUrl !== ''
+            ? <b><br /><a href={openPayloadUrl} target="_blank">Payload Pushed, no push received? Open Payload...</a></b>
+            : 'Payload pushed'
+          : ''
+      }
       <pre>{ lastPayloadUpdate }</pre>
     </div>
   )

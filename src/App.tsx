@@ -2,12 +2,45 @@ import { useState } from 'react'
 import './App.css'
 import {Xumm} from 'xumm'
 
-const xumm = new Xumm('xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx') // Some API Key
+const xumm = new Xumm('xxxx') // Some API Key
 
 function App() {
   const [account, setAccount] = useState('')
+  const [payloadUuid, setPayloadUuid] = useState('')
+  const [lastPayloadUpdate, setLastPayloadUpdate] = useState('')
 
   xumm.user.account.then(a => setAccount(a ?? ''))
+
+  const createPayload = async () => {
+    const payload = await xumm.payload?.createAndSubscribe({
+      TransactionType: 'Payment',
+      Destination: 'rwietsevLFg8XSmG3bEZzFein1g8RBqWDZ',
+      Account: account,
+      Amount: String(1337),
+    }, event => {
+      console.log(event.data)
+
+      // Return if signed or not signed (rejected)
+      setLastPayloadUpdate(JSON.stringify(event.data, null, 2))
+
+      // Only return (websocket will live till non void)
+      if (Object.keys(event.data).indexOf('signed') > -1) {
+        return true
+      }
+    })
+
+    if (payload) {
+      setPayloadUuid(payload.created.uuid)
+
+      if (xumm.runtime.xapp) {
+        xumm.xapp?.openSignRequest(payload.created)
+      } else {
+        window.open(payload.created.next.always)
+      }
+    }
+
+    return payload
+  }
 
   return (
     <div className="App">
@@ -19,6 +52,15 @@ function App() {
           ? <button onClick={xumm.authorize}>Sign in</button>
           : ''
       }
+      {
+        account !== ''
+          ? <button onClick={createPayload}>Make a payment</button>
+          : ''
+      }
+      <br />
+      <br />
+      <code>{ payloadUuid }</code>
+      <pre>{ lastPayloadUpdate }</pre>
     </div>
   )
 }

@@ -12,6 +12,11 @@ function App() {
 
   xumm.user.account.then(a => setAccount(a ?? ''))
 
+  const logout = () => {
+    xumm.logout()
+    setAccount('')
+  }
+
   const createPayload = async () => {
     const payload = await xumm.payload?.createAndSubscribe({
       TransactionType: 'Payment',
@@ -57,7 +62,11 @@ function App() {
       }
       {
         account !== ''
-          ? <button onClick={createPayload}>Make a payment</button>
+          ? <>
+              <button onClick={createPayload}>Make a payment</button>
+              &nbsp;- or -&nbsp;
+              <button onClick={logout}>Sign Out</button>
+            </>
           : ''
       }
       <br />

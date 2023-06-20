@@ -2,15 +2,17 @@ import { useState } from 'react'
 import './App.css'
 import {Xumm} from 'xumm'
 
-const xumm = new Xumm('47fdfcb7-8362-47fe-9a89-a2efc55e86d5') // Some API Key
+const xumm = new Xumm('your-api-key-uuid') // Some API Key
 
 function App() {
   const [account, setAccount] = useState('')
   const [payloadUuid, setPayloadUuid] = useState('')
   const [lastPayloadUpdate, setLastPayloadUpdate] = useState('')
   const [openPayloadUrl, setOpenPayloadUrl] = useState('')
+  const [appName, setAppName] = useState('')
 
   xumm.user.account.then(a => setAccount(a ?? ''))
+  xumm.environment.jwt?.then(j => setAppName(j?.app_name ?? ''))
 
   const logout = () => {
     xumm.logout()
@@ -52,6 +54,7 @@ function App() {
 
   return (
     <div className="App">
+      <h2>{ appName }</h2>
       <div>
         Hi <b>{ account }</b>
       </div>
